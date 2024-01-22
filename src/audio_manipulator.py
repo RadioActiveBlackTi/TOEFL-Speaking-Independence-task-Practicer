@@ -76,10 +76,10 @@ def stop():
     print('stop recording')
 
 if __name__=="__main__":
-start()
-time.sleep(10)
-stop()
+    start()
+    time.sleep(10)
+    stop()
 
-topic_tts("Would you prefer to work in a team or work alone on a project? Include details and explanation.")
-prepare_tts()
-speaknow_tts()
+    topic_tts("Would you prefer to work in a team or work alone on a project? Include details and explanation.")
+    prepare_tts()
+    speaknow_tts()
