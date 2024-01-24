@@ -1,11 +1,25 @@
 from tkinter import *
 import customtkinter as ctk
 import tkinter.filedialog as fd
-import gpt_parser as gp
-import audio_manipulator as au
+
 from tkinter.scrolledtext import ScrolledText
+import random
+import tkinter.messagebox as msg
 
 from threading import Thread
+
+try:
+    import gpt_parser as gp
+except:
+    msg.showerror("GPT api key error", "OpenAI api key is not available or not in appropriate place. Make sure that " +
+                                       "api key is in the same folder of this file, and saved as 'gpt-api-key.txt'.")
+    quit()
+
+try:
+    import audio_manipulator as au
+except:
+    msg.showerror("Audio error", "Audio device has some error. Please check about it.")
+    quit()
 
 LARGEFONT =("Times", 30)
 MIDFONT =("Times", 20)
@@ -37,15 +51,22 @@ class StartPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         def start():
             if mode_value.get():
-                topic = gp.get_topic()
+                try:
+                    topic = gp.get_topic()
+                except:
+                    msg.showerror("ChatGPT Error", "ChatGPT could not generate topic. Please check your condition.")
+                    return
             else:
-                topic = "Would you prefer to work in a team or work alone on a project? Include details and explanation."
+                try:
+                    with open(link_value.get()) as f:
+                        topic_list = f.read().split("\n")
+                        print(topic_list)
+                        topic = random.choice(topic_list)
+                except:
+                    msg.showerror("File Opening Error", "The file has not properly opened. Please check the format of the file.")
+                    return
 
             controller.frames[ProblemPage].test(topic)
-
-        def only_test():
-            controller.show_frame(ReviewPage)
-
 
         def finder():
             if mode_value.get():
@@ -63,7 +84,7 @@ class StartPage(ctk.CTkFrame):
         link_value = StringVar()
         link_value.set("")
 
-        mode_button = ctk.CTkButton(self, text="Mode", font=LARGEFONT, width=300, height=100, command = only_test)
+        mode_button = ctk.CTkButton(self, text="Mode", font=LARGEFONT, width=300, height=100)
         radio1 = ctk.CTkRadioButton(self, text = 'GPT', variable = mode_value, value = 1, font=LARGEFONT, width=50, height=50)
         radio2 = ctk.CTkRadioButton(self, text='Pre-defined', variable = mode_value, value=0, font=LARGEFONT, width=50, height=50)
 
@@ -258,9 +279,9 @@ class ReviewPage(ctk.CTkFrame):
         th_response.start()
         th_suggestion.start()
 
-
-app = TkinterApp()
-app.geometry("1280x720")
-app.resizable(width=False, height=False)
-app.title("TOEFL Seaking Independent task Practicer")
-app.mainloop()
+if __name__=="__main__":
+    app = TkinterApp()
+    app.geometry("1280x720")
+    app.resizable(width=False, height=False)
+    app.title("TOEFL Seaking Independent task Practicer")
+    app.mainloop()
