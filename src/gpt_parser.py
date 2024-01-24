@@ -24,8 +24,8 @@ def get_topic():
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user",
-                  "content": """Can you provide ONE TOPIC example of TOEFL speaking independence task 
-                  with agreement/disagreement or preference style?
+                  "content": """Can you provide ONLY ONE TOPIC example of TOEFL speaking independence task 
+                  with EXCEPT DESCRIBING/EXPERIENCE style??
                   
                   TOPIC SUGGESTION means specific topic like 'Would you prefer to take a challenging course or an easy course at university?".
                   DESCRIPTION means some words like "Include details and explanation." or "State whether you agree or disagree with the following statement. Then explain your reasons using specific details in your explanation."
