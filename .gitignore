@@ -80,3 +80,4 @@ fabric.properties
 
 src/gpt-api-key.txt
 src/resources/record.wav
+src/__pycache__

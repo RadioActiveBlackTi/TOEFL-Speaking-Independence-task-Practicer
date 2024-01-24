@@ -7,19 +7,20 @@ import random
 import tkinter.messagebox as msg
 
 from threading import Thread
+import sys
 
 try:
     import gpt_parser as gp
 except:
     msg.showerror("GPT api key error", "OpenAI api key is not available or not in appropriate place. Make sure that " +
                                        "api key is in the same folder of this file, and saved as 'gpt-api-key.txt'.")
-    quit()
+    sys.exit()
 
 try:
     import audio_manipulator as au
 except:
     msg.showerror("Audio error", "Audio device has some error. Please check about it.")
-    quit()
+    sys.exit()
 
 LARGEFONT =("Times", 30)
 MIDFONT =("Times", 20)
@@ -145,18 +146,22 @@ class ProblemPage(ctk.CTkFrame):
         print(self.topic)
 
     def instruction(self):
-        for work, args in [(au.topic_tts, self.topic), (au.delay, 2), (au.prepare_tts, None), (au.beep, None),
-                           (au.delay, (15, self.pre_timer)), (au.speaknow_tts, None), (au.beep, None),
-                           (au.record_start, None), (au.delay, (45, self.speak_timer)),
-                           (au.record_stop, None), (au.delay, 1)]:
-            if isinstance(args, type(str())) or isinstance(args, type(int())):
-                work(args)
-            elif isinstance(args, type(tuple())):
-                work(args[0], args[1])
-            else:
-                work()
+        try:
+            for work, args in [(au.topic_tts, self.topic), (au.delay, 2), (au.prepare_tts, None), (au.beep, None),
+                               (au.delay, (15, self.pre_timer)), (au.speaknow_tts, None), (au.beep, None),
+                               (au.record_start, None), (au.delay, (45, self.speak_timer)),
+                               (au.record_stop, None), (au.delay, 1)]:
+                if isinstance(args, type(str())) or isinstance(args, type(int())):
+                    work(args)
+                elif isinstance(args, type(tuple())):
+                    work(args[0], args[1])
+                else:
+                    work()
 
-        self.controller.frames[ReviewPage].review(self.topic)
+            self.controller.frames[ReviewPage].review(self.topic)
+        except:
+            msg.showerror("Resource error", "Please check the consistency of resources.")
+            sys.exit()
         return
 
     def test(self, topic):
@@ -267,6 +272,7 @@ class ReviewPage(ctk.CTkFrame):
         def to_home():
             th_response.join()
             th_suggestion.join()
+            au.stop_speech()
             self.controller.show_frame(StartPage)
 
         self.home_button.configure(command=to_home)
