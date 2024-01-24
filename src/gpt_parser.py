@@ -47,7 +47,7 @@ def get_sample_response(topic: str):
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user",
-                   "content": f"""Give me the well-done possible 45-second-response script composed with 2 reasons of this topic:
+                   "content": f"""Give me a well-done possible SHORT 45-SECOND-response script composed with 2 reasons of this topic:
                    
                    [{topic}]
 
@@ -58,7 +58,7 @@ def get_sample_response(topic: str):
     )
 
     chat_response = completion.choices[0].message.content
-    print(chat_response)
+    return chat_response
 
 if __name__=="__main__":
     topic = get_topic()

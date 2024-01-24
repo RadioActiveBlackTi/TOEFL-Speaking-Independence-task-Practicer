@@ -123,6 +123,19 @@ def speaking_to_text():
 
     return speech_text
 
+def start_speech():
+    pygame.mixer.music.load(resource_path('resources/record.wav'))
+    pygame.mixer.music.play()
+
+def pause_speech():
+    pygame.mixer.music.pause()
+
+def unpause_speech():
+    pygame.mixer.music.unpause()
+
+def stop_speech():
+    pygame.mixer.music.stop()
+
 if __name__=="__main__":
     """
     record_start()

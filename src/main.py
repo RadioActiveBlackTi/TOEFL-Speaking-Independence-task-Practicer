@@ -3,6 +3,7 @@ import customtkinter as ctk
 import tkinter.filedialog as fd
 import gpt_parser as gp
 import audio_manipulator as au
+from tkinter.scrolledtext import ScrolledText
 
 from threading import Thread
 
@@ -42,6 +43,9 @@ class StartPage(ctk.CTkFrame):
 
             controller.frames[ProblemPage].test(topic)
 
+        def only_test():
+            controller.show_frame(ReviewPage)
+
 
         def finder():
             if mode_value.get():
@@ -59,7 +63,7 @@ class StartPage(ctk.CTkFrame):
         link_value = StringVar()
         link_value.set("")
 
-        mode_button = ctk.CTkButton(self, text="Mode", font=LARGEFONT, width=300, height=100)
+        mode_button = ctk.CTkButton(self, text="Mode", font=LARGEFONT, width=300, height=100, command = only_test)
         radio1 = ctk.CTkRadioButton(self, text = 'GPT', variable = mode_value, value = 1, font=LARGEFONT, width=50, height=50)
         radio2 = ctk.CTkRadioButton(self, text='Pre-defined', variable = mode_value, value=0, font=LARGEFONT, width=50, height=50)
 
@@ -119,30 +123,141 @@ class ProblemPage(ctk.CTkFrame):
         self.topic_string.set(self.topic)
         print(self.topic)
 
+    def instruction(self):
+        for work, args in [(au.topic_tts, self.topic), (au.delay, 2), (au.prepare_tts, None), (au.beep, None),
+                           (au.delay, (15, self.pre_timer)), (au.speaknow_tts, None), (au.beep, None),
+                           (au.record_start, None), (au.delay, (45, self.speak_timer)),
+                           (au.record_stop, None), (au.delay, 1)]:
+            if isinstance(args, type(str())) or isinstance(args, type(int())):
+                work(args)
+            elif isinstance(args, type(tuple())):
+                work(args[0], args[1])
+            else:
+                work()
+
+        self.controller.frames[ReviewPage].review(self.topic)
+        return
+
     def test(self, topic):
         self.topic = topic
         self.variable_setting()
-        def audio():
-            for work, args in [(au.topic_tts, self.topic), (au.delay, 2), (au.prepare_tts, None), (au.beep, None),
-                               (au.delay, (15, self.pre_timer)), (au.speaknow_tts, None), (au.beep, None),
-                               (au.record_start, None), (au.delay, (45, self.speak_timer)),
-                               (au.record_stop, None), (au.delay, 1)]:
-                if isinstance(args, type(str())) or isinstance(args, type(int())):
-                    work(args)
-                elif isinstance(args, type(tuple())):
-                    work(args[0], args[1])
-                else:
-                    work()
-
 
         self.controller.show_frame(ProblemPage)
-        th1 = Thread(target=audio)
+        th1 = Thread(target=self.instruction, daemon=True)
         th1.start()
 
 
 class ReviewPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
+        def pause():
+            au.pause_speech()
+            button_play.configure(command=unpause)
+
+        def unpause():
+            au.unpause_speech()
+
+        def start():
+            au.start_speech()
+            button_pause.configure(command=pause)
+
+        def stop():
+            au.stop_speech()
+            button_play.configure(command=start)
+            button_pause.configure(command=pause)
+
         ctk.CTkFrame.__init__(self, parent)
+
+        self.controller = controller
+        self.topic = "NULL TEXT"
+        self.response = "NULL RESPONSE"
+        self.suggestion = "NULL SUGGESTION"
+
+        left_frame = ctk.CTkFrame(self, border_width=1)
+        right_frame = ctk.CTkFrame(self, border_width=1)
+        top_frame = ctk.CTkFrame(self, height=100)
+
+        top_frame.pack(side="top", fill="x", expand=False)
+        left_frame.pack(side="left", fill="both", expand=True)
+        right_frame.pack(side="right", fill="both", expand=True)
+
+        # left frame part
+        label1 = Label(left_frame, text="Your Response", font=('Arial', 25))
+        button_play = ctk.CTkButton(left_frame, text="Play", font=MIDFONT, command=start)
+        button_pause = ctk.CTkButton(left_frame, text="Pause", font=MIDFONT)
+        button_stop = ctk.CTkButton(left_frame, text="Stop", font=MIDFONT, command=stop)
+
+        self.response_text = ScrolledText(left_frame, height=32, font=('Arial', 11))
+
+        label1.grid(row=0, column=0, columnspan=3, sticky="we")
+        button_play.grid(row=1, column=0, sticky="we")
+        button_pause.grid(row=1, column=1, sticky="we")
+        button_stop.grid(row=1, column=2, sticky="we")
+        self.response_text.grid(row=2, column=0, columnspan=3, sticky="swe")
+
+        # right frame part
+        self.topic_text = ScrolledText(right_frame, width=66, height=10, font=('Arial', 13))
+        label2 = Label(right_frame, text="GPT Suggestion", font=('Arial', 25))
+        self.suggestion_text = ScrolledText(right_frame, width=66, height=23.3, font=('Arial', 13))
+
+        self.topic_text.grid(row=0, column=0, sticky="w")
+        label2.grid(row=1, column=0, sticky="we")
+        self.suggestion_text.grid(row=2, column=0, sticky="nws")
+
+        # top frame part
+        self.home_button = ctk.CTkButton(top_frame, text="Home", font=LARGEFONT)
+
+        self.home_button.pack(side="left", padx=20, pady=20)
+
+        self.text_set()
+
+
+    def text_set(self):
+        self.response_text.config(state="normal")
+        self.response_text.delete('1.0', END)
+        self.response_text.insert(END, self.response)
+        self.response_text.config(state="disabled")
+
+        self.topic_text.config(state="normal")
+        self.topic_text.delete('1.0', END)
+        self.topic_text.insert(END, self.topic)
+        self.topic_text.config(state="disabled")
+
+        self.suggestion_text.config(state="normal")
+        self.suggestion_text.delete('1.0', END)
+        self.suggestion_text.insert(END, self.suggestion)
+        self.suggestion_text.config(state="disabled")
+
+    def get_response(self):
+        self.response = au.speaking_to_text()
+        self.text_set()
+        return
+
+    def get_suggestion(self):
+        self.suggestion = gp.get_sample_response(self.topic)
+        self.text_set()
+        return
+
+    def review(self, topic):
+        self.topic = topic
+        self.response = "Processing..."
+        self.suggestion = "Processing..."
+        self.text_set()
+
+        def to_home():
+            th_response.join()
+            th_suggestion.join()
+            self.controller.show_frame(StartPage)
+
+        self.home_button.configure(command=to_home)
+
+        self.controller.show_frame(ReviewPage)
+
+        th_response = Thread(target=self.get_response, daemon=True)
+        th_suggestion = Thread(target=self.get_suggestion, daemon=True)
+
+        th_response.start()
+        th_suggestion.start()
+
 
 app = TkinterApp()
 app.geometry("1280x720")
