@@ -1,5 +1,5 @@
-# TOEFL-Speaking-Independence-task-Practicer
-TSIP: TOEFL Speaking Independece task Practicer
+# TOEFL-Speaking-Independent-task-Practicer
+TSIP: TOEFL Speaking Independent task Practicer
 
 Before you begin with using this, please put your OpenAI API key into './src/gpt-api-key.txt'.
 
